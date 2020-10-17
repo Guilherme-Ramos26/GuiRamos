@@ -1,0 +1,215 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+#include <string.h>
+#include <conio.h>
+
+#define LOGIN_MAX	64
+#define SENHA_MAX	32
+
+struct usuario_t {
+	char login[64];
+	char senha[32];
+};
+
+typedef struct Med{
+	char nome[20], data_nasc[8], email[30], cpf[12];
+};
+Med GetMedico(){
+	Med medico;
+	printf("\t\t\t\t\t\tCadastro de Medicos\n\n");
+	printf("\nDigite o Nome: ");
+	scanf("%s", &medico.nome);
+	printf("\nDigite o Nascimento: ");
+	scanf("%s", &medico.data_nasc);
+	printf("\nDigite o Email: ");
+	scanf("%s", &medico.email);
+	printf("\nDigite o CPF: ");
+	scanf("%s", &medico.cpf);
+	rewind(stdin);
+	return medico;
+}
+void PrintMedico(Med medico){
+	printf("\n\tNome: %s\n", medico.nome);
+	printf("\tNascimento: %s\n", medico.data_nasc);
+	printf("\tEmail: %s\n", medico.email);
+	printf("\tCPF: %s\n", medico.cpf);
+}
+void cadastro_med(){
+		Med medico;
+	
+	char resp;
+	
+	FILE *cadastro_med;
+	
+	if((cadastro_med = fopen("Med.Dat", "ab+")) == NULL) exit(1);
+	
+		do{
+		 medico = GetMedico();
+			if(fwrite(&medico,sizeof(Med),1,cadastro_med)!=1)break;
+			printf("Mais um login (s/n)? ");
+			resp = getche();
+		}while(resp != 'n' && resp != 'N');
+		
+	fflush(cadastro_med);
+	fseek(cadastro_med,0,0);
+	
+	puts("\n\nLista de Medicos no Arquivo");
+	puts("===========================");
+	
+	while(fread(&medico, sizeof(Med),1,cadastro_med)==1)
+	PrintMedico(medico);
+	fclose(cadastro_med);
+	system("pause");
+}
+
+void cadastrar_login()
+{
+	FILE *login_arq;
+	struct usuario_t usuario;
+	memset(&usuario, 0, sizeof(struct usuario_t));
+
+	printf("Cadastro de usuário: \n");
+	printf("login> ");
+	scanf("%s", &usuario.login);
+	printf("senha> ");
+	scanf("%s", &usuario.senha);
+
+	login_arq = fopen("login", "wb");
+	if (!login_arq) {
+		printf("Não foi possível criar o arquivo de login");
+		return;
+	}
+	fwrite(&usuario, sizeof(struct usuario_t), 1, login_arq);
+	fclose(login_arq);
+}
+
+int login()
+{
+    FILE *login_arq;
+	struct usuario_t usuario;
+	
+	login_arq = fopen("login", "rb");
+		
+	if (!login_arq) {
+		cadastrar_login();
+		login_arq = fopen("login", "rb");
+		if (!login_arq) {
+		    printf("Não foi possivel encontrar o arquivo de login\n");
+		    return 0;
+		}
+	}
+	memset(&usuario, 0, sizeof(struct usuario_t));
+
+	fread(&usuario, sizeof(struct usuario_t), 1, login_arq);
+	fclose(login_arq);
+	if (!strcmp("", usuario.login)) {
+		printf("Nenhum usuário encontrado\n");
+		cadastrar_login();
+	} else {
+	    int tentativas = 0;
+		do {
+			char login[LOGIN_MAX];
+			char senha[SENHA_MAX];
+			printf("\nLogin: ");
+			scanf("%s", &login);
+			printf("\nSenha: ");
+			scanf("%s", &senha);
+			if (!strcmp(login, usuario.login) && !strcmp(senha, usuario.senha)) {
+				system("cls");
+				printf("Bem vindo %s\n", usuario.login);
+				return 1;
+			} else {
+				printf("Usuário ou senha invalidos!\n");
+				tentativas++;
+			}
+		} while (tentativas < 3);
+		printf("Numero maximo de tentativas alcançado!\n");
+        return 0;
+	}
+	return 0;
+}
+
+void avaliacao(){
+	int menuescolha;
+	FILE *avaliacao;
+	char ch;
+	setlocale(LC_ALL,"");
+	printf("\t\t\t---Avaliar Clinica---\n\n");
+	printf("\n[1]Pessimo\n[2]Ruim\n[3]Bom\n[4]Otimo\nDigite o numero:\n");
+	scanf("%f");
+	printf("\nfaça um comentario:\n");
+	scanf("%f",menuescolha);
+
+		switch(menuescolha){
+
+		case 1:
+		printf("Pessimo");
+		break;
+	
+		case 2:
+		printf("Ruim");
+		break;
+	
+		case 3:
+		printf("Bom");
+		break;
+
+		case 4:
+		printf("Otimo");
+		break;
+	}
+		
+	avaliacao=fopen("avaliacao.txt","w");
+	while((ch=getche()) != '\r')
+	fputc(ch,avaliacao);
+	fclose(avaliacao);
+	printf("obrigado pela avaliação, tenha um otimo dia volte sempre.\n\n");	
+	system("pause");
+}
+
+void menu_principal(){
+	printf("\n------------Escolha um numero------------\n|           1 - Cadastro		|\n|           2 - Avaliacao		|\n|           3 - Cancelamento	 	|\n-----------------------------------------");
+	
+	int escolha;
+	
+	printf("\nDigite o numero: ");
+	scanf("%d", &escolha);
+	
+	switch(escolha){
+		
+		case 1:
+			system("cls");
+			cadastro_med();
+			break;
+		case 2:
+			system("cls");
+			avaliacao();
+			break;
+		case 3:
+			system("cls");
+			
+			break;
+		case 4:		
+			system("cls");
+			
+			break;	
+		default:
+			printf("\nEscolha o numero correspondente\n");
+			break;
+	}
+	
+}
+
+int main(){
+	system("color 73");
+	setlocale (LC_ALL, "");
+	
+	printf("\t\t\t\t\t\tCLINICA");
+	
+	login();
+	menu_principal();
+
+	
+	return 0;
+}
